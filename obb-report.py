@@ -39,7 +39,8 @@ def generated_report(results):
                 for ob in obb.data:
                     class_id = int(ob[-1])
                     class_name = result[0].names[class_id]
-                    report_file.write(f'Объект: {class_name}, Координаты: {ob[:-1].tolist()}\n')
+                    report_file.write(f'Объект: {class_name},'
+                                      f' Координаты: {ob[:-1].tolist()}\n')
 
                 else:
                     report_file.write('Такие объекты не обнаружены \n')
