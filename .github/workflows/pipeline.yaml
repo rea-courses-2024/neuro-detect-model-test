@@ -77,4 +77,4 @@ jobs:
 
       - name: Run unit tests
         run: |
-          pytest tests.py
+          python tests.py
