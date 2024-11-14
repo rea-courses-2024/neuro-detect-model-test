@@ -1,9 +1,6 @@
 import os
 import cv2
-import torch
-import numpy as np
 from ultralytics import YOLO
-import matplotlib.pyplot as plt
 
 model = YOLO('yolov8l-obb.pt')
 

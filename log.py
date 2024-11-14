@@ -1,8 +1,6 @@
 import cv2
 from ultralytics import YOLO
 import logging
-import os
-import matplotlib.pyplot as plt
 
 log_file = 'application.log'
 logging.basicConfig(

@@ -32,11 +32,14 @@ class TestYOLOReportObject(unittest.TestCase):
                 boxes = result[0].boxes
                 if boxes is not None and len(boxes) > 0:
                     for box in boxes.data:
-                        self.assertIsNotNone(box, 'Результат должен быть не None\n')
+                        self.assertIsNotNone(
+                            box, 'Результат должен быть не None\n')
 
                         x1, y1, x2, y2, conf, class_id = box.tolist()
                         class_name = self.model.names[int(class_id)]
-                        report_file.write(f"Обнаружен объект класса {class_name}, уверенность {conf}\n")
+                        report_file.write(
+                            f"Обнаружен объект класса {class_name},"
+                            f" уверенность {conf}\n")
 
                         if class_name == 'dog':
                             dog_detection = True
@@ -44,7 +47,8 @@ class TestYOLOReportObject(unittest.TestCase):
                 else:
                     report_file.write('Объекты не обнаружены \n')
 
-            self.assertTrue(dog_detection, "Ожидаемый объект класса dog найден не был")
+            self.assertTrue(dog_detection,
+                            "Ожидаемый объект класса dog найден не был")
 
             report_file.write('Тест пройден: объект найден')
 
