@@ -1,16 +1,48 @@
-name: Security code analytics
+#name: Security code analytics
+#
+#on:
+#  push:
+#    branches:
+#      - 14.11.2024
+#
+#  pull_request:
+#    branches:
+#      - 14.11.2024
+#
+#jobs:
+#  code-analytics:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#
+#      - name: Set up Python
+#        uses: actions/setup-python@v2
+#        with:
+#          python-version: '3.12.3'
+#
+#      - name: Install Bandit
+#        run: |
+#          pip install bandit
+#
+#      - name: Run Bandit security analytics
+#        run: |
+#          bandit -r .
+
+
+
+name: Code Quality and Unit Tests
 
 on:
   push:
     branches:
       - 14.11.2024
-
   pull_request:
     branches:
       - 14.11.2024
 
 jobs:
-  code-analytics:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -21,10 +53,10 @@ jobs:
         with:
           python-version: '3.12.3'
 
-      - name: Install Bandit
+      - name: Install dependencies
         run: |
-          pip install bandit
+          pip install flake8
 
-      - name: Run Bandit security analytics
+      - name: Run lint
         run: |
-          bandit -r .
+          flake8 .
