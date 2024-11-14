@@ -1,54 +1,67 @@
-import argparse
+import cv2
 from ultralytics import YOLO
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import os
 
+# Инициализация модели YOLO
+model = YOLO('yolov8m-seg.pt')
 
-def main():
-    parser = argparse.ArgumentParser(description='Система понимания для YOLO')
+# Инициализация Dash приложения
+app = dash.Dash(__name__)
 
-    # Скалярные параметры
-    parser.add_argument('--epochs', type=int, default=350, help='Количество эпох обучения')
-    parser.add_argument('--batch', type=int, default=8, help='Размер пакета для обучения')
-    parser.add_argument('--imgsz', type=int, default=640, help='Размер изображения')
-    parser.add_argument('--patience', type=int, default=200, help='Параметр терпения для ранней остановки')
+image_dir = 'images'
 
-    # Непосредственно пользовательские параметры
-    parser.add_argument('--data', type=str, required=True, help='Путь к файлу данных (data.yaml)')
-    parser.add_argument('--model', type=str, default='yolov8m-seg.pt', help='Путь к модели YOLO')
+# Обработка изображений один раз
+def process_images():
+    image_files = [f for f in os.listdir(image_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
+    details = []
 
-    # Логические параметры
-    parser.add_argument('--verbose', action='store_true', help='Выводить подробную информацию')
-    parser.add_argument('--use_augmentation', action='store_true', help='Использовать аугментацию данных')
+    for image_file in image_files:
+        image_path = os.path.join(image_dir, image_file)
+        frame = cv2.imread(image_path)
+        if frame is not None:
+            result = model(frame, iou=0.4, conf=0.6)
+            count = len(result[0].boxes)
+            details.append({'filename': image_file, 'detections': count})
 
-    # Параметры с несколькими значениями
-    parser.add_argument('--optimizers', nargs='+', default=['adam'], help='Список оптимизаторов для использования')
-    parser.add_argument('--metrics', nargs='+', default=['loss', 'mAP'], help='Список метрик для оценки')
+    return details
 
-    # Строковый параметр
-    parser.add_argument('--output_dir', type=str, default='./output', help='Директория для сохранения результатов')
+# Макет приложения
+app.layout = html.Div([
+    html.H1("Гистограмма количества детекций по изображениям"),
+    dcc.Graph(id='detection-histogram'),
+    html.Button('Обработать изображения', id='process-button', n_clicks=0),
+    html.Div(id='output-container')
+])
 
-    args = parser.parse_args()
+# Обновление графиков в Dash
+@app.callback(
+    Output('detection-histogram', 'figure'),
+    Output('output-container', 'children'),
+    Input('process-button', 'n_clicks')
+)
+def update_graph(n_clicks):
+    if n_clicks > 0:
+        details = process_images()
+        detection_histogram = {
+            'data': [{
+                'x': [d['filename'] for d in details],
+                'y': [d['detections'] for d in details],
+                'type': 'bar',
+                'name': 'Количество детекций по изображениям'
+            }],
+            'layout': {
+                'title': 'Количество детекций по изображениям',
+                'xaxis': {'title': 'Имя файла', 'tickangle': -45},
+                'yaxis': {'title': 'Количество детекций'},
+            }
+        }
 
-    # Создание и обучение модели YOLO
-    model = YOLO(args.model)
+        return detection_histogram, f'Обработано изображений: {len(details)}'
 
-    # Параметры для обучения
-    train_params = {
-        'data': args.data,
-        'epochs': args.epochs,
-        'imgsz': args.imgsz,
-        'patience': args.patience,
-        'batch': args.batch,
-        'verbose': args.verbose,
-        'augment': args.use_augmentation,
-        'optimizer': args.optimizers[0],  # Используем первый оптимизатор из списка
-        'metrics': args.metrics
-    }
-
-    # Обучение модели
-    model.train(**train_params)
-
-    print(f'Обучение модели {args.model} завершено. Результаты сохранены в {args.output_dir}')
-
+    return {}, 'Нажмите кнопку для обработки изображений'
 
 if __name__ == '__main__':
-    main()
+    app.run_server(debug=True)
